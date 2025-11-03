@@ -86,6 +86,7 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                   required 
                   disabled={isLoading}
+                  autoComplete="current-password"
                 />
               </Field>
               <Field>

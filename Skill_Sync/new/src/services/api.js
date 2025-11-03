@@ -73,10 +73,10 @@ const apiRequest = async (endpoint, options = {}) => {
 // Auth API
 export const authAPI = {
   // Register - sends OTP to email
-  register: async (email, password, name) => {
+  register: async (email, password, name, role) => {
     const response = await apiRequest('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({ email, password, name, role }),
     });
     
     // Store OTP if returned (development mode)

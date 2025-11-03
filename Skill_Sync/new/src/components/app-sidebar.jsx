@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
+  Activity,
   BookOpen,
   Bot,
   Command,
@@ -11,7 +11,7 @@ import {
   Map,
   PieChart,
   Settings2,
-  SquareTerminal,
+  Terminal,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -41,7 +41,7 @@ const data = {
     },
     {
       name: "Acme Corp.",
-      logo: AudioWaveform,
+      logo: Activity,
       plan: "Startup",
     },
     {
@@ -54,7 +54,7 @@ const data = {
     {
       title: "Dashboard",
       url: "/dashboard",
-      icon: SquareTerminal,
+      icon: Terminal,
       isActive: true,
       // items: [
       //   {

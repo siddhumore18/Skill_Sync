@@ -18,14 +18,29 @@ const generateOTP = () => {
  * POST /api/auth/register
  * Register a new user with email
  */
+// Valid roles for the application
+const ROLES = {
+  ADMIN: 'admin',
+  ENTREPRENEUR: 'entrepreneur',
+  INVESTOR: 'investor',
+  FREELANCER: 'freelancer'
+};
+
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, role } = req.body;
 
     // Validate input
-    if (!email || !password) {
+    if (!email || !password || !role) {
       return res.status(400).json({ 
-        error: 'Email and password are required' 
+        error: 'Email, password, and role are required' 
+      });
+    }
+
+    // Validate role
+    if (!Object.values(ROLES).includes(role)) {
+      return res.status(400).json({
+        error: `Invalid role. Must be one of: ${Object.values(ROLES).join(', ')}`
       });
     }
 
@@ -51,29 +66,27 @@ router.post('/register', async (req, res) => {
     const otp = generateOTP();
     const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    // Store OTP
+    // Store OTP with user data
     otpStore.set(email, {
       otp,
       expiry: otpExpiry,
       password,
       name,
+      role
     });
 
     // Send OTP email
     try {
       const emailResult = await sendOTPEmail(email, otp);
       
-      // Check if we're in development mode without email config
-      const isEmailConfigured = emailResult && emailResult.otp;
-      
-      if (isEmailConfigured && process.env.NODE_ENV === 'development') {
-        // Development mode: return OTP in response
+      // If email is NOT configured, only then allow dev fallback with OTP
+      if (emailResult?.notConfigured && process.env.NODE_ENV === 'development') {
         console.warn('📧 Email not configured. Returning OTP in response (development mode).');
         return res.json({ 
           success: true, 
           message: 'OTP generated (email not configured - development mode)',
           email,
-          otp: emailResult.otp, // Return OTP in development mode
+          otp: emailResult.otp,
           development: true
         });
       }
@@ -166,6 +179,7 @@ router.post('/verify-otp', async (req, res) => {
       user: {
         email: email,
         name: storedData.name || email.split('@')[0],
+        role: storedData.role || ROLES.FREELANCER, // Default to freelancer if not set
       },
       // Note: User creation happens on frontend to avoid permission issues
     });
@@ -405,6 +419,54 @@ router.post('/resend-otp', async (req, res) => {
     res.status(500).json({ 
       error: 'Failed to resend OTP', 
       message: error.message 
+    });
+  }
+});
+
+/**
+ * Test email endpoint (temporary, remove in production)
+ */
+router.get('/test-email', async (req, res) => {
+  const testEmail = req.query.email || 'test@example.com';
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  console.log('\n=== Testing Email Sending ===');
+  console.log(`Sending test email to: ${testEmail}`);
+  
+  try {
+    const result = await sendOTPEmail(testEmail, otp);
+    
+    if (result.success) {
+      console.log('✅ Email sent successfully!');
+      return res.json({
+        success: true,
+        message: 'Test email sent successfully',
+        email: testEmail,
+        otp: process.env.NODE_ENV === 'development' ? otp : 'Check your email',
+        debug: {
+          brevoConfigured: !!(process.env.BREVO_SMTP_USER && process.env.BREVO_SMTP_PASSWORD),
+          senderEmail: process.env.BREVO_SENDER_EMAIL
+        }
+      });
+    } else {
+      console.error('❌ Email sending failed:', result.error);
+      return res.status(500).json({
+        success: false,
+        error: result.error,
+        details: result.details || 'No additional details available',
+        debug: {
+          brevoConfigured: !!(process.env.BREVO_SMTP_USER && process.env.BREVO_SMTP_PASSWORD),
+          senderEmail: process.env.BREVO_SENDER_EMAIL
+        }
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error in test endpoint:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to send test email',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

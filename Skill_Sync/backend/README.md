@@ -35,19 +35,35 @@ Follow the complete guide in [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) to:
 
 2. Fill in your environment variables in `.env`:
    ```env
+   # Firebase Configuration
+   FIREBASE_PROJECT_ID=your-project-id
+   FIREBASE_CLIENT_EMAIL=your-client-email
+   FIREBASE_PRIVATE_KEY=your-private-key
+
+   # Brevo Email Configuration
+   BREVO_SMTP_SERVER=smtp-relay.brevo.com
+   BREVO_SMTP_PORT=587
+   BREVO_SMTP_USER=your-brevo-smtp-username
+   BREVO_SMTP_PASSWORD=your-brevo-smtp-password
+   BREVO_SENDER_EMAIL=your-verified-sender-email@domain.com
+   BREVO_SENDER_NAME=SkillSync Team
+
+   # Server Configuration
    PORT=3001
    NODE_ENV=development
-   FIREBASE_PROJECT_ID=your-project-id
-   EMAIL_HOST=smtp.gmail.com
-   EMAIL_PORT=587
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-app-password
    FRONTEND_URL=http://localhost:5174
    ```
 
-3. Place your `serviceAccountKey.json` file in the `backend` folder (downloaded from Firebase Console)
+   **3. Set up Brevo (formerly Sendinblue) for email:**
+   - Create a free account at [brevo.com](https://www.brevo.com/)
+   - Go to **SMTP & API** settings in your Brevo account
+   - Create an SMTP key and copy the credentials
+   - Add them to your `.env` file
+   - Verify your sender email address in Brevo dashboard
 
-### 4. Start Server
+4. Place your `serviceAccountKey.json` file in the `backend` folder (downloaded from Firebase Console)
+
+### 5. Start Server
 
 **Development mode (with auto-reload):**
 ```bash
@@ -177,7 +193,7 @@ const socket = io('http://localhost:3001', {
 backend/
 ├── config/
 │   ├── firebase.js      # Firebase Admin SDK initialization
-│   └── email.js         # Email configuration for OTP
+│   └── email.js         # Brevo email configuration for OTP
 ├── routes/
 │   ├── auth.js          # Authentication routes
 │   └── chat.js          # Chat API routes

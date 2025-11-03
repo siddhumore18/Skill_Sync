@@ -9,9 +9,18 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { authAPI } from "@/services/api"
 import { useToast } from "@/components/ui/use-toast"
 import { OTPVerification } from "@/components/otp-verification"
+
+// Available user roles
+const ROLES = [
+  { value: 'entrepreneur', label: 'Entrepreneur' },
+  { value: 'investor', label: 'Investor' },
+  { value: 'freelancer', label: 'Freelancer' },
+  { value: 'admin', label: 'Admin' }
+];
 
 export function SignupForm({
   className,
@@ -22,6 +31,7 @@ export function SignupForm({
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [name, setName] = useState("")
+  const [role, setRole] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showOTP, setShowOTP] = useState(false)
   const [pendingOTP, setPendingOTP] = useState(null)
@@ -48,10 +58,19 @@ export function SignupForm({
       return
     }
 
+    if (!role) {
+      toast({
+        title: "Role required",
+        description: "Please select a role",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const response = await authAPI.register(email, password, name || email.split('@')[0])
+      const response = await authAPI.register(email, password, name || email.split('@')[0], role)
       
       // Check if OTP was returned (development mode)
       if (response.development && response.otp) {
@@ -114,7 +133,7 @@ export function SignupForm({
                 </p>
               </div>
               <Field>
-                <FieldLabel htmlFor="name">Name</FieldLabel>
+                <FieldLabel>Name</FieldLabel>
                 <Input 
                   id="name" 
                   type="text" 
@@ -128,7 +147,7 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel>Email</FieldLabel>
                 <Input 
                   id="email" 
                   type="email" 
@@ -144,6 +163,23 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
+                <FieldLabel htmlFor="role">Role</FieldLabel>
+                <select
+                  id="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                >
+                  <option value="">Select your role</option>
+                  {ROLES.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field>
                 <Field className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -154,6 +190,7 @@ export function SignupForm({
                       onChange={(e) => setPassword(e.target.value)}
                       required 
                       disabled={isLoading}
+                      autoComplete="new-password"
                     />
                   </Field>
                   <Field>
@@ -167,6 +204,7 @@ export function SignupForm({
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required 
                       disabled={isLoading}
+                      autoComplete="new-password"
                     />
                   </Field>
                 </Field>
